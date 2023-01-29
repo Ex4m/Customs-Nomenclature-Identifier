@@ -25,6 +25,7 @@ with open('tokenizer.pickle', 'wb') as handle:
 max_length = max([len(s) for s in sequences])
 # Pad the sequences to the same length
 padded_sequences = pad_sequences(sequences, maxlen=max_length)
+padded_sequences = [list(map(int,sequence)) for sequence in padded_sequences]
 
 # Create the model
 model = Sequential()
@@ -40,13 +41,24 @@ model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=
 epochs = input("How much epochs to train? ")
 
 # Fit the model
-np_hscodes = np.asarray(hs_codes)
-print(np_hscodes)
-np_paddseq = np.asarray(padded_sequences)
-model.fit(np_paddseq.astype(int), np_hscodes.astype(int), epochs=epochs)
+np_hscodes = np.array(hs_codes).astype(int)
+np_paddseq = np.array(padded_sequences).astype(int)
+"""print(np_paddseq.shape)
+print(np_paddseq.dtype)
+print(np_hscodes.shape)
+print(np_hscodes.dtype)"""
+for i, hs_code in enumerate(hs_codes):
+    if isinstance(hs_code, str):
+        print("Value at index {} is a string: {}".format(i, hs_code))
+for seq in padded_sequences:
+    if not isinstance(seq, int):
+        print("Non-integer element found:", seq)
+
+    
+#model.fit(np_paddseq, np_hscodes, epochs=epochs)
 
 # Save the model
-model.save("hs_code_model.h5")
+#model.save("hs_code_model.h5")
 
 
 """
