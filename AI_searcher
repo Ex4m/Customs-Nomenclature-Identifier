@@ -1,0 +1,34 @@
+from keras.preprocessing.text import Tokenizer
+from keras.models import load_model
+from keras.utils import pad_sequences
+
+import pickle
+
+
+# Load the trained model
+model = load_model('model.h5')
+
+# Load the tokenizer
+with open('tokenizer.pickle', 'rb') as handle:
+    tokenizer = pickle.load(handle)
+
+# Define the maximum length of input sequences
+max_length = 100
+
+# Define the user input
+user_input = "Smartphone with a 6 inch screen and 64GB storage"
+
+# Convert the user input to a list
+input_list = [user_input]
+
+# Tokenize the input list
+input_sequences = tokenizer.texts_to_sequences(input_list)
+
+# Pad the input sequences
+padded_sequences = pad_sequences(input_sequences, maxlen=max_length)
+
+# Use the trained model to predict the HS code
+hs_code = model.predict(padded_sequences)
+
+# Print the predicted HS code
+print("Predicted HS code:", hs_code)
