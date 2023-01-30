@@ -46,34 +46,12 @@ epochs = input("How much epochs to train? ")
 
 # Fit the model
 np_hscodes = np.array(hs_codes).astype(int)
-max_len = np.shape(padded_sequences)[1]
-np_hscodes = np.pad(np_hscodes, (0, max_len - np_hscodes.shape[0]), 'constant')
-np_hscodes = np_hscodes.reshape(-1, max_len)
+n_rows = np_hscodes.shape[0] 
+np_hscodes.reshape(n_rows, 1).astype(int)
 np_paddseq = np.array(padded_sequences).astype(int)
-
-print(np_paddseq.shape)
-print(np_paddseq.dtype)
-print(np_hscodes.shape)
-print(np_hscodes.dtype)
-for i, hs_code in enumerate(hs_codes):
-    if isinstance(hs_code, str):
-        print("Value at index {} is a string: {}".format(i, hs_code))
-"""for seq in padded_sequences:
-    if not isinstance(seq, int):
-        print("Non-integer element found:", seq)"""
-def check_strings(padded_seq):
-    for element in padded_seq:
-        for seq in element:
-            print(seq)
-            print(type(seq))
-            time.sleep(0.2)
-
-
-#check_strings(np_paddseq)
-
-    
+ 
 try:
-    model.fit(np_paddseq, np_hscodes, epochs=epochs)
+    model.fit(np_paddseq, np_hscodes, epochs=epochs, show_accuracy=True)
 except Exception as e:
     print("Error encountered during model fitting:")
     print(e)
@@ -84,6 +62,7 @@ except Exception as e:
 
 # Save the model
 model.save("hs_code_model.h5")
+print("model saved")
 
 
 """
