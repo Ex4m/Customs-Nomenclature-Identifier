@@ -6,12 +6,16 @@ from keras.layers import Embedding, LSTM, Dense, Dropout
 from keras.utils import pad_sequences
 from keras.utils import to_categorical
 import pickle
+import time
+import sys
+
 # Load the dataset
 df = pd.read_json("Nom_output", lines= True)
 
 # Extract the descriptions and hs codes
 descriptions = df["Description"].tolist()
 hs_codes = df["HS Code"].tolist()
+
 
 # Create a tokenizer
 tokenizer = Tokenizer()
@@ -42,23 +46,44 @@ epochs = input("How much epochs to train? ")
 
 # Fit the model
 np_hscodes = np.array(hs_codes).astype(int)
+max_len = np.shape(padded_sequences)[1]
+np_hscodes = np.pad(np_hscodes, (0, max_len - np_hscodes.shape[0]), 'constant')
+np_hscodes = np_hscodes.reshape(-1, max_len)
 np_paddseq = np.array(padded_sequences).astype(int)
-"""print(np_paddseq.shape)
+
+print(np_paddseq.shape)
 print(np_paddseq.dtype)
 print(np_hscodes.shape)
-print(np_hscodes.dtype)"""
+print(np_hscodes.dtype)
 for i, hs_code in enumerate(hs_codes):
     if isinstance(hs_code, str):
         print("Value at index {} is a string: {}".format(i, hs_code))
-for seq in padded_sequences:
+"""for seq in padded_sequences:
     if not isinstance(seq, int):
-        print("Non-integer element found:", seq)
+        print("Non-integer element found:", seq)"""
+def check_strings(padded_seq):
+    for element in padded_seq:
+        for seq in element:
+            print(seq)
+            print(type(seq))
+            time.sleep(0.2)
+
+
+#check_strings(np_paddseq)
 
     
-#model.fit(np_paddseq, np_hscodes, epochs=epochs)
+try:
+    model.fit(np_paddseq, np_hscodes, epochs=epochs)
+except Exception as e:
+    print("Error encountered during model fitting:")
+    print(e)
+    print("Location of the error:", sys.exc_info()[2].tb_lineno)
+    print("Data causing the error:")
+    print("np_paddseq:", np_paddseq)
+    print("np_hscodes:", np_hscodes)
 
 # Save the model
-#model.save("hs_code_model.h5")
+model.save("hs_code_model.h5")
 
 
 """
