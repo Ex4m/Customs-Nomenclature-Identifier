@@ -1,12 +1,13 @@
 from keras.preprocessing.text import Tokenizer
 from keras.models import load_model
 from keras.utils import pad_sequences
-
+from Train_the_model import np_paddseq
 import pickle
 
+desc_num = np_paddseq.shape[1]
 
 # Load the trained model
-model = load_model('model.h5')
+model = load_model("C:/Users/Exa/Documents/GitHub/Customs-Nomenclature-Identifier/hs_code_model.h5")
 
 # Load the tokenizer
 with open('tokenizer.pickle', 'rb') as handle:
@@ -16,7 +17,7 @@ with open('tokenizer.pickle', 'rb') as handle:
 max_length = 100
 
 # Define the user input
-user_input = "Smartphone with a 6 inch screen and 64GB storage"
+user_input = "plastic shoes"
 
 # Convert the user input to a list
 input_list = [user_input]
@@ -25,7 +26,7 @@ input_list = [user_input]
 input_sequences = tokenizer.texts_to_sequences(input_list)
 
 # Pad the input sequences
-padded_sequences = pad_sequences(input_sequences, maxlen=max_length)
+padded_sequences = pad_sequences(input_sequences, desc_num)
 
 # Use the trained model to predict the HS code
 hs_code = model.predict(padded_sequences)

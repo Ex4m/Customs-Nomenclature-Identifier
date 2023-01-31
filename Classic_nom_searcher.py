@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import tflearn
 
-trained_data = pd.read_json("C:/Users/Exa/Desktop/Python/Customs Nomenclature finder/Nom_output", lines = True)
+trained_data = pd.read_json("Nom_output_orig", lines = True)
 
 trained_data = pd.DataFrame(trained_data)
 
@@ -14,8 +14,8 @@ while True:
     top_five = trained_data[trained_data["Description"].str.contains(user_input, case = False, regex = True)].sort_values("Description", ascending=False).head(5)
     print(top_five)
 
-    response = input("Do you want to run the script again? y/n: ")
-    if response.lower() not in possible_response:
+    response = input("type --- 'exit' ---- to quit the script or anything else to continue: ")
+    if response.lower() == "exit":
         break
 print("So, we are done here :)")
 
