@@ -1,3 +1,86 @@
+import numpy as np
+import tensorflow as tf
+from keras.preprocessing.text import Tokenizer
+from keras.utils import pad_sequences
+from keras.models import Sequential
+from keras.layers import Embedding, Dense, LSTM
+import pandas as pd
+
+# Load the dataset
+df = pd.read_json("Nom_output", lines= True)
+
+# Extract the descriptions and hs codes
+descriptions = df["Description"].tolist()
+hs_codes = df["HS Code"].tolist()
+
+# Tokenize the descriptions
+tokenizer = Tokenizer()
+tokenizer.fit_on_texts(descriptions)
+word_index = tokenizer.word_index
+
+# Convert descriptions to sequences
+sequences = tokenizer.texts_to_sequences(descriptions)
+
+# Pad sequences to ensure they have the same length
+max_length = max([len(seq) for seq in sequences])
+padded_sequences = pad_sequences(sequences, maxlen=max_length, padding="post")
+
+# Create the model
+model = Sequential([
+    Embedding(input_dim=len(word_index) + 1, output_dim=64, input_length=max_length),
+    LSTM(64),
+    Dense(1, activation="sigmoid")
+])
+
+# Compile the model
+model.compile(loss="binary_crossentropy", optimizer="adam", metrics=["accuracy"])
+
+# Fit the model
+np_paddseq = np.array(padded_sequences).astype(int)
+n_padrows = np_paddseq.shape[0] 
+np_paddseq = np_paddseq.reshape((n_padrows, max_length))
+np_hscodes = np.array(hs_codes)
+n_rows = np_hscodes.shape[0] 
+np_hscodes = np_hscodes.reshape((n_rows,1))
+epochs = int(input("How many epochs? "))
+model.fit(np_paddseq, np_hscodes, epochs=epochs)
+
+# Predict on a sample input
+sample_input = " research"
+sample_input_sequence = tokenizer.texts_to_sequences([sample_input])
+padded_sample_input = pad_sequences(sample_input_sequence, maxlen=max_length, padding="post")
+# Predict on all inputs
+padded_inputs = np.array(padded_sequences)
+predictions = model.predict(padded_inputs)
+
+# Find the index of the highest predicted probability for each input
+best_match_indices = np.argmax(predictions, axis=1)
+
+# Output the best match for each input
+print("Best matches:")
+for i in range(len(descriptions)):
+    
+  print(f"{descriptions[i]} -> {descriptions[best_match_indices[i]]} (HS Code: {np_hscodes[best_match_indices[i]]})")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#2nd type of training
+"""
 import pandas as pd
 import numpy as np
 from keras.preprocessing.text import Tokenizer
@@ -42,16 +125,16 @@ model.add(Dense(units=len(set(hs_codes)), activation='softmax'))
 model.compile(loss='sparse_categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
 # Define the number of training epochs
-epochs = input("How much epochs to train? ")
+epochs = int(input("How much epochs to train? "))
 
 # Fit the model
 np_hscodes = np.array(hs_codes).astype(int)
 n_rows = np_hscodes.shape[0] 
-np_hscodes.reshape(n_rows, 1).astype(int)
+np_hscodes = np_hscodes.reshape(n_rows,1).astype(int)
 np_paddseq = np.array(padded_sequences).astype(int)
  
 try:
-    model.fit(np_paddseq, np_hscodes, epochs=epochs, show_accuracy=True)
+    model.fit(np_paddseq, np_hscodes, epochs=epochs)
 except Exception as e:
     print("Error encountered during model fitting:")
     print(e)
@@ -62,7 +145,23 @@ except Exception as e:
 
 # Save the model
 model.save("hs_code_model.h5")
-print("model saved")
+print("model saved")"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 """
