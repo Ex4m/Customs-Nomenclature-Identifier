@@ -46,22 +46,24 @@ epochs = int(input("How many epochs? "))
 model.fit(np_paddseq, np_hscodes, epochs=epochs)
 
 # Predict on a sample input
-sample_input = " research"
+sample_input = input("Enter a sample input: ")
 sample_input_sequence = tokenizer.texts_to_sequences([sample_input])
 padded_sample_input = pad_sequences(sample_input_sequence, maxlen=max_length, padding="post")
-# Predict on all inputs
-padded_inputs = np.array(padded_sequences)
-predictions = model.predict(padded_inputs)
+predictions = model.predict(np.array([padded_sample_input[0]]))
 
-# Find the index of the highest predicted probability for each input
-best_match_indices = np.argmax(predictions, axis=1)
+# Find the index of the highest predicted probability
+best_match_index = np.argmax(predictions[:,np.argmax(model.predict(np.array([padded_sample_input[0]])))])
+# Output the best match
+print("Best match:", descriptions[best_match_index])
+print("HS Code: ", np_hscodes[best_match_index])
 
+"""
 # Output the best match for each input
 print("Best matches:")
 for i in range(len(descriptions)):
     
   print(f"{descriptions[i]} -> {descriptions[best_match_indices[i]]} (HS Code: {np_hscodes[best_match_indices[i]]})")
-
+"""
 
 
 
