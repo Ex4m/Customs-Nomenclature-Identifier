@@ -1,0 +1,31 @@
+from Levenshtein import distance
+from fuzzywuzzy import fuzz
+import pandas as pd
+
+dataset = pd.read_json("Nom_output_orig", lines= True)
+
+def get_best_fitting_descriptions(user_input, dataset, top_n=5):
+    # create an empty list to store the results
+    results = []
+    for index, row in dataset.iterrows():
+        ratio = fuzz.token_set_ratio(user_input, row["Description"])
+        results.append((row["HS Code"], row["Description"], ratio))
+    # sort the results by the similarity score (ratio)
+    results.sort(key=lambda x: x[2], reverse=True)
+    # return the top n results
+    return results[:top_n]
+
+while True:
+    user_input = input("\n\n\nType description for which HS code you are looking for: ")
+    best_fits = get_best_fitting_descriptions(user_input, dataset, top_n=5)
+    for hs_code, description, ratio in best_fits:
+        print("HS code:", hs_code)
+        print("Description:", description)
+        print("Similarity:", ratio)
+        print("-----------------------------")
+    if user_input == "quit":
+        print("Bye")
+        break
+
+
+    
