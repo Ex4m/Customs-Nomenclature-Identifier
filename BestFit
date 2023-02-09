@@ -1,8 +1,9 @@
 from Levenshtein import distance
 from fuzzywuzzy import fuzz
 import pandas as pd
-
-dataset = pd.read_json("Nom_output_orig", lines= True)
+import multiprocessing as mp
+# standard process search
+"""dataset = pd.read_json("Nom_output_orig", lines= True)
 
 def get_best_fitting_descriptions(user_input, dataset, top_n=5):
     # create an empty list to store the results
@@ -25,7 +26,70 @@ while True:
         print("-----------------------------")
     if user_input == "quit":
         print("Bye")
-        break
+        break"""
 
+# Multiprocess search
+def get_best_fitting_descriptions(chunk, user_input, top_n=5, result_queue=None):
+    # create an empty list to store the results
+    results = []
+    for index, row in chunk.iterrows():
+        ratio = fuzz.token_set_ratio(user_input, row["Description"])
+        results.append((row["HS Code"], row["Description"], ratio))
+    # sort the results by the similarity score (ratio)
+    results.sort(key=lambda x: x[2], reverse=True)
+    # return the top n results
+    if result_queue is None:
+        return results[:top_n]
+    else:
+        result_queue.put(results[:top_n])
+
+def process_data(user_input, chunks, top_n=5, num_workers=4):
+    # Create a queue to return the results
+    result_queue = mp.Queue()
+
+    # Create a process for each chunk of data
+    processes = [mp.Process(target=get_best_fitting_descriptions,
+                            args=(chunk, user_input, top_n, result_queue))
+                 for chunk in chunks]
+
+    # Start the processes
+    for process in processes:
+        process.start()
+
+    # Wait for all processes to finish
+    for process in processes:
+        process.join()
+
+    # Get the results from the queue
+    results = [result_queue.get() for _ in range(len(processes))]
+
+    # Flatten the results and sort them
+    results = [result for sublist in results for result in sublist]
+    results.sort(key=lambda x: x[2], reverse=True)
+
+    # Return the top n results
+    return results[:top_n]
+
+
+if __name__ == '__main__':
+    dataset = pd.read_json("Nom_output_orig", lines= True)
+    num_workers = 4
+    # Divide the dataset to chunk siye i.e. 1153 / 4 .. int will round it down
+    chunk_size = int(dataset.shape[0] / num_workers)
+    # Create new list of chunks. Iterate through entire original dataset with step of chunk_size
+    # ITERATION 1st i = 0, 2nd i = chunk_size, 3rd = 2x chunk_size
+    # [i:i + chunk_size] is for slicing, range defines start,stop and step 
+    chunks = [dataset[i:i + chunk_size] for i in range(0, dataset.shape[0], chunk_size)]
+    while True:
+        user_input = input("\n\n\nType description for which HS code you are looking for: ")
+        best_fits = process_data(user_input, chunks, top_n=5, num_workers=4)
+        for hs_code, description, ratio in best_fits:
+            print("HS code:", hs_code)
+            print("Description:", description)
+            print("Similarity:", ratio)
+            print("-----------------------------")
+        if user_input == "quit":
+            print("Bye")
+            break
 
     
