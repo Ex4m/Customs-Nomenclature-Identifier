@@ -3,9 +3,60 @@ import tensorflow as tf
 from keras.preprocessing.text import Tokenizer
 from keras.utils import pad_sequences
 from keras.models import Sequential
-from keras.layers import Embedding, Dense, LSTM
+from keras.layers import Embedding, Dense, LSTM, Flatten
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
+# Load dataset
+data = pd.read_json("Nom_output_orig", lines= True)
+
+# Encode the HS code as categorical values
+data['HS Code'] = data['HS Code'].astype(str)
+data['HS Code'] = data['HS Code'].astype('category').cat.codes
+hs_codes = data["HS Code"].tolist()
+
+# Convert the categorical HS code to one-hot encoding
+target = pd.get_dummies(data['HS Code'])
+
+# Prepare the descriptions for input to the model
+descriptions = data['Description'].tolist()
+
+# Tokenize the descriptions
+tokenizer = tf.keras.preprocessing.text.Tokenizer(num_words=200)
+tokenizer.fit_on_texts(descriptions)
+descriptions = tokenizer.texts_to_matrix(descriptions, mode='binary')
+
+# Split the data into train and test sets
+X_train, X_test, y_train, y_test = train_test_split(descriptions, target, test_size=0.2)
+
+# Build the model
+model = tf.keras.models.Sequential()
+model.add(tf.keras.layers.Dense(100, activation='relu', input_shape=(200,)))
+model.add(tf.keras.layers.Dense(100, activation='relu'))
+model.add(tf.keras.layers.Dense(len(target.columns), activation='softmax'))
+
+# Compile the model
+model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+
+# Train the model
+model.fit(X_train, y_train, epochs=10, batch_size=64, verbose=1, validation_data=(X_test, y_test))
+
+# Evaluate the model
+score, acc = model.evaluate(X_test, y_test, verbose=0)
+print("Accuracy:", acc)
+
+# Use the model to make predictions
+test_desc = ["PLASTIC PACKAGING SUPPLIES (PLAPAC) PLASTIC TRAY"]
+test_desc = tokenizer.texts_to_matrix(test_desc, mode='binary')
+predictions = model.predict(test_desc)
+predicted_index = np.argmax(predictions)
+predicted_hs_code = hs_codes[predicted_index]
+print("Predicted HS code:", predicted_hs_code)
+
+
+
+#3rd try
+"""
 # Load the dataset
 df = pd.read_json("Nom_output", lines= True)
 
@@ -56,7 +107,7 @@ best_match_index = np.argmax(predictions[:,np.argmax(model.predict(np.array([pad
 # Output the best match
 print("Best match:", descriptions[best_match_index])
 print("HS Code: ", np_hscodes[best_match_index])
-
+"""
 """
 # Output the best match for each input
 print("Best matches:")
